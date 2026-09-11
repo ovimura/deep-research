@@ -1,6 +1,6 @@
 import gradio as gr
 from dotenv import load_dotenv
-from research_manager import ResearchManager
+from research_manager import ResearchManager, is_status
 from styles import CSS, JS, EXAMPLES, HEADER_HTML, wait_markup
 
 load_dotenv(override=True)
@@ -74,19 +74,20 @@ async def run_research(job: dict | None):
         return
 
     try:
-        pending = None
+        report_text = ""
         async for update in ResearchManager().run(job["query"], job["clarifications"]):
-            if pending is not None:
+            if is_status(update):
                 yield (
-                    gr.update(value=wait_markup(pending), visible=True),
+                    gr.update(value=wait_markup(update), visible=True),
                     gr.skip(),
                     gr.skip(),
                     gr.skip(),
                 )
-            pending = update
+            else:
+                report_text = update
         yield (
             gr.update(value="", visible=False),
-            pending or "",
+            report_text,
             gr.update(interactive=True),
             gr.update(interactive=True),
         )
