@@ -18,6 +18,22 @@ HEADER_HTML = """
 </div>
 """
 
+def wait_markup(status: str) -> str:
+    from html import escape
+    return f"""
+<div class="dr-wait">
+    <div class="dr-wait-mark">
+        <span class="dr-bar dr-bar-1"></span>
+        <span class="dr-bar dr-bar-2"></span>
+        <span class="dr-bar dr-bar-3"></span>
+    </div>
+    <div class="dr-wait-copy">
+        <p class="dr-wait-label">Investigating</p>
+        <p class="dr-wait-status">{escape(status)}</p>
+    </div>
+</div>
+"""
+
 CSS = """
 .gradio-container {
     --dr-bg: #fafaf7;
@@ -163,6 +179,53 @@ body { background: var(--dr-bg, #fafaf7); }
 
 #dr-run:active { transform: translate(2px, 2px) !important; }
 
+#dr-run:disabled, #dr-run[disabled] {
+    opacity: 0.55 !important;
+    cursor: wait !important;
+    transform: none !important;
+}
+
+/* === CLARIFY === */
+#dr-clarify {
+    gap: 0.75rem !important;
+}
+
+#dr-clarify .dr-examples-label {
+    margin-top: 1.25rem;
+}
+
+#dr-clarify textarea, #dr-clarify input {
+    background: var(--dr-surface) !important;
+    color: var(--dr-text) !important;
+    border: 1.5px solid var(--dr-line-soft) !important;
+    border-radius: 0 !important;
+    padding: 0.85rem 1rem !important;
+    font-size: 0.95rem !important;
+    font-family: inherit !important;
+    box-shadow: none !important;
+    line-height: 1.45 !important;
+    resize: none !important;
+}
+
+#dr-clarify textarea:focus, #dr-clarify input:focus {
+    outline: none !important;
+    border-color: var(--dr-blue) !important;
+    box-shadow: 6px 6px 0 0 var(--dr-blue) !important;
+}
+
+#dr-clarify textarea::placeholder, #dr-clarify input::placeholder {
+    color: var(--dr-muted) !important;
+    opacity: 1 !important;
+}
+
+#dr-clarify label, #dr-clarify .label-wrap span {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    color: var(--dr-muted) !important;
+}
+
 /* === EXAMPLES === */
 .dr-examples-label {
     font-family: ui-monospace, SFMono-Regular, monospace;
@@ -232,6 +295,57 @@ body { background: var(--dr-bg, #fafaf7); }
     border-color: var(--dr-purple) !important;
     color: var(--dr-purple) !important;
     transform: translateY(-1px);
+}
+
+/* === WAIT === */
+.dr-wait {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--dr-line-soft);
+}
+
+.dr-wait-mark {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 38px;
+    flex-shrink: 0;
+}
+
+.dr-wait-mark .dr-bar {
+    transform-origin: left center;
+    animation: dr-wait-pulse 1.1s ease-in-out infinite;
+}
+
+.dr-wait-mark .dr-bar-1 { animation-delay: 0s; }
+.dr-wait-mark .dr-bar-2 { animation-delay: 0.15s; }
+.dr-wait-mark .dr-bar-3 { animation-delay: 0.3s; }
+
+@keyframes dr-wait-pulse {
+    0%, 100% { opacity: 0.3; transform: scaleX(0.55); }
+    50% { opacity: 1; transform: scaleX(1); }
+}
+
+.dr-wait-copy { min-width: 0; }
+
+.dr-wait-label {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--dr-muted);
+}
+
+.dr-wait-status {
+    margin: 0.4rem 0 0;
+    color: var(--dr-text);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    word-break: break-word;
 }
 
 /* === REPORT === */

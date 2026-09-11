@@ -7,24 +7,38 @@ import asyncio
 
 class ResearchManager:
 
-    async def run(self, query: str):
+    def _brief(self, query: str, clarifications: dict | None = None) -> str:
+        parts = [f"Query: {query}"]
+        labels = {
+            "audience": "Audience and purpose",
+            "scope": "Scope and constraints",
+            "success": "Success criteria",
+        }
+        for key, label in labels.items():
+            value = ((clarifications or {}).get(key) or "").strip()
+            if value:
+                parts.append(f"{label}: {value}")
+        return "\n".join(parts)
+
+    async def run(self, query: str, clarifications: dict | None = None):
         """ Run the deep research process, yielding the status updates and the final report"""
         trace_id = gen_trace_id()
+        brief = self._brief(query, clarifications)
         with trace("Research trace", trace_id=trace_id):
             yield f"Starting research. Trace: https://platform.openai.com/traces/trace?trace_id={trace_id}"
-            search_plan = await self.plan_searches(query)
+            search_plan = await self.plan_searches(brief)
             yield f"Searches planned, starting {len(search_plan.searches)} searches..."     
             search_results = await self.perform_searches(search_plan)
             yield "Searches complete, writing report..."
-            report = await self.write_report(query, search_results)
+            report = await self.write_report(brief, search_results)
             yield "Report written, sending email..."
             await self.send_email(report)
             yield "Email sent, research complete"
             yield report.markdown_report
 
-    async def plan_searches(self, query: str) -> WebSearchPlan:
+    async def plan_searches(self, brief: str) -> WebSearchPlan:
         """ Plan the searches to perform for the query """
-        result = await Runner.run(planner_agent, f"Query: {query}")
+        result = await Runner.run(planner_agent, brief)
         return result.final_output
 
     async def perform_searches(self, search_plan: WebSearchPlan) -> list[str]:
@@ -38,9 +52,9 @@ class ResearchManager:
         result = await Runner.run(search_agent, input_message)
         return result.final_output
 
-    async def write_report(self, query: str, search_results: list[str]) -> ReportData:
+    async def write_report(self, brief: str, search_results: list[str]) -> ReportData:
         """ Write the report for the query """
-        input_message = f"Original query: {query}\nSummarized search results: {search_results}"
+        input_message = f"{brief}\nSummarized search results: {search_results}"
         result = await Runner.run(writer_agent, input_message)
         return result.final_output
     
